@@ -1,0 +1,165 @@
+replicaCount: 1
+
+tags:
+  autoscaling: true
+  loadBalancing: true
+
+image:
+  imageName: nvcr.io/nvidia/tritonserver:24.05-py3
+  pullPolicy: IfNotPresent
+  serverCommand: tritonserver
+  serverArgs:
+    - --model-repository=${MODEL_REPOSITORY_PATH}
+    # Model Repository Configuration (REQUIRED)
+    #
+    # Configure sources for model repository below.  Multiple repositories
+    # can be specified
+    #
+    # To download models from an S3 bucket, uncomment and configure below
+    # To specify a non-AWS S3 endpoint, use the form
+    #  s3://https://your-s3-endpoint:443/bucket/model_repository
+    #
+    #- --model-repository=s3://triton-inference-server-repository/model_repository
+    #
+    # Model Control Mode (Optional, default: none)
+    #
+    # To set model control mode, uncomment and configure below
+    #  for more details
+    #- --model-control-mode=explicit|poll|none
+    #
+    # Additional server args
+    #
+    # see https://github.com/triton-inference-server/server/blob/r24.05/README.md
+    #  for more details
+  modelRepositoryPath: # model repository path, depends on storage type
+  modelRepositoryType: nfs
+  modelRepository:
+    nfs:
+      path: # Add path of NFS directory
+      server: # Replace with the IP Address of your file server
+  env: {}
+
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+      nvidia.com/gpu: 1
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+      nvidia.com/gpu: 1
+
+    # nvidia.com/gpu: 0
+    # nvidia.com/mig-1g.10gb: 0
+    # nvidia.com/mig-2g.20gb: 0
+    # nvidia.com/mig-3g.40gb: 0
+
+  extraVolumeMounts:
+    # - name: logs
+    #   mountPath: /logs
+
+  extraVolumes:
+    # - name: logs
+    #   emptyDir: {}
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+inference_service:
+  type: ClusterIP
+
+metrics_service:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 8080
+      targetPort: metrics
+      protocol: TCP
+  monitor:
+    endpoints:
+      - port: metrics
+        interval: 15s
+
+inference_deployment:
+  ports:
+    http: 8000
+    grpc: 8001
+    metrics: 8002
+
+ingress:
+  enabled: false
+  className: ""
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+  metrics:
+    - type: Pods
+      pods:
+        metric:
+          name: avg_time_queue_us
+        target:
+          type: AverageValue
+          averageValue: 50
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Prometheus-Operator ServiceMonitor support
+# change enabled to 'true' to enable a ServiceMonitor if your cluster has
+#  Prometheus-Operator installed
+serviceMonitor:
+  enabled: false
+
+secret:
+  name: tis-model-repository-secret
+  data:
+    # update the following with base64 encoded parameters
+    #  AWS_REGION: YOUR_AWS_REGION_BASE64_ENCODED
+    #  AWS_SECRET_KEY_ID: YOUR_AWS_SECRET_KEY_ID_ENCODED
+    #  AWS_SECRET_ACCESS_KEY: YOUR_AWS_SECRET_ACCESS_KEY_BASE64_ENCODED
+    #  AWS_SESSION_TOKEN: YOUR_AWS_SESSION_TOKEN_BASE64_ENCODED

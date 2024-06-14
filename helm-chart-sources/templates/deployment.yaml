@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "triton-inference-server.fullname" . }}
+  labels:
+    {{- include "triton-inference-server.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "triton-inference-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "triton-inference-server.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- if eq .Values.image.modelRepositoryType ".nfs" }}
+        - name: models
+          nfs:
+            server: {{ .Values.image.modelRepository.nfs.server }}
+            path: {{ .Values.image.modelRepository.nfs.path }}
+            readOnly: false
+        {{- end }}
+        
+      {{- if .Values.image.extraVolumes }}
+        {{ toYaml .Values.image.extraVolumes | indent 8 }}
+      {{- end }}
+
+      serviceAccountName: {{ include "triton-inference-server.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.imageName }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+          {{- if eq .Values.image.modelRepositoryType ".nfs" }}
+            - mountPath: /models
+              name: models
+          {{- end }}
+
+          {{- if .Values.image.extraVolumeMounts }}
+            {{ toYaml .Values.image.extraVolumeMounts | indent 12 }}
+          {{- end }}
+
+          args:
+            - {{ .Values.image.serverCommand }}
+#            {{- $args := required "image.serverArgs, at least --model-repository, is required!" .Values.image.serverArgs }}
+            {{- $args := .Values.image.serverArgs }}
+            {{- range $args }}
+            - {{ . -}}
+            {{ end }}
+        
+            {{- range .Values.serverArgs }}
+            - {{ . }}
+            {{- end }}
+
+          env:
+          {{- if .Values.image.env }}
+          {{- range $key, $value := .Values.image.env }}
+            - name: {{ $key }}
+              value: {{ $value }}
+          {{- end }}
+          {{- end }}
+
+          {{- if .Values.secret }}
+          {{- range $key, $value := .Values.secret.data }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  value: {{ $value }}
+          {{- end }}
+          {{- end }}           
+          
+          ports:
+            - containerPort: {{ .Values.inference_deployment.ports.http }}
+              name: http
+            - containerPort:  {{ .Values.inference_deployment.ports.grpc }}
+              name: grpc
+            - containerPort:  {{ .Values.inference_deployment.ports.metrics }}
+              name: metrics
+          
+          livenessProbe:
+            initialDelaySeconds: 15
+            failureThreshold: 3
+            periodSeconds: 10
+            httpGet:
+              path: /v2/health/live
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
+            httpGet:
+              path: /v2/health/ready
+              port: http
+          startupProbe:
+            # allows Triton to load the models during 30*10 = 300 sec = 5 min
+            # starts checking the other probes only after the success of this one
+            # for details, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes
+            periodSeconds: 10
+            failureThreshold: 30
+            httpGet:
+              path: /v2/health/ready
+              port: http
+
+          resources: {{- toYaml .Values.image.resources | nindent 12 }}
+              
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

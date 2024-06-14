@@ -1,0 +1,57 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "triton-inference-server.fullname" . }}
+  labels:
+    {{- include "triton-inference-server.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.inference_service.type }}
+  ports:
+    - port: {{ .Values.inference_deployment.ports.http }}
+      targetPort: http
+      protocol: TCP
+      name: http-inference-server
+    - port: {{ .Values.inference_deployment.ports.grpc }}
+      targetPort: grpc
+      name: grpc-inference-server
+    - port: {{ .Values.inference_deployment.ports.metrics }}
+      targetPort: metrics
+      name: metrics-inference-server
+  selector:
+    {{- include "triton-inference-server.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "triton-inference-server-metrics.fullname" . }}
+  labels:
+    {{- include "triton-inference-server.labels" . | nindent 4 }}
+  annotations:
+    alpha.monitoring.coreos.com/non-namespaced: "true"
+spec:
+  type: {{ .Values.metrics_service.type }}
+  ports: {{ toYaml .Values.metrics_service.ports | nindent 2 }}
+
+  selector:
+    {{- include "triton-inference-server.selectorLabels" . | nindent 4 }}
+---
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ template "triton-inference-server-metrics-monitor.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "triton-inference-server-metrics-monitor.name" . }}
+    chart: {{ template "triton-inference-server.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    {{- include "triton-inference-server.selectorLabels" . | nindent 4 }}
+
+  endpoints:
+  - port: metrics
+    interval: 15s
+{{- end }}
