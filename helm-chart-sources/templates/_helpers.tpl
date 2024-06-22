@@ -86,7 +86,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "triton-inference-server.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
+{{- if eq .Values.serviceAccount.create true }}
 {{- default (include "triton-inference-server.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
