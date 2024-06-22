@@ -73,7 +73,7 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: ""
+  name: triton-inference
 
 podAnnotations: {}
 
@@ -156,6 +156,7 @@ serviceMonitor:
   enabled: false
 
 secret:
+  create: true
   name: tis-model-repository-secret
   data:
     # update the following with base64 encoded parameters

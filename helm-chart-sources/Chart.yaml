@@ -4,3 +4,4 @@ name: triton-inference-server
 type: application
 version: 1.0.0
 appVersion: "1.0"
+icon: https://avatars.githubusercontent.com/u/5445689?v=4&size=64
