@@ -3,13 +3,13 @@ entries:
   triton-inference-server:
   - apiVersion: v2
     appVersion: "1.0"
-    created: "2024-06-30T22:38:51.394720112-04:00"
+    created: "2024-10-25T04:35:06.427255076-04:00"
     description: Triton Inference Server
-    digest: aa4cec2f8209fae5cc18f3db1dc66f58d9701f65721935fed3faf0566e93c819
+    digest: 7587edab7677d36dddcd17e8506eae0bcd3da42bc3b60955c2c3f77f56b50bd0
     icon: https://avatars.githubusercontent.com/u/5445689?v=4&size=64
     name: triton-inference-server
     type: application
     urls:
-    - https://forwardmeasure.github.io/nvidia-triton-inference-server-helm-chart/triton-inference-server-1.0.0.tgz
+    - https://forwardmeasure.github.io/spark-cluster-helm-chart/triton-inference-server-1.0.0.tgz
     version: 1.0.0
-generated: "2024-06-30T22:38:51.393111545-04:00"
+generated: "2024-10-25T04:35:06.426199099-04:00"
