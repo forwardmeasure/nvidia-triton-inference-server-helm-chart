@@ -12,12 +12,14 @@ REPO_URL=${REPO_URL:-"https://forwardmeasure.github.io/nvidia-triton-inference-s
 DO_TAG=true
 DO_PUSH=true
 DO_BRANCH=true
+BASE_BRANCH="develop"
 
 # === PARSE ARGS ===
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     --version) VERSION_OVERRIDE="$2"; shift ;;
     --message) COMMIT_MSG="$2"; shift ;;
+    --base-branch) BASE_BRANCH="$2"; shift ;;
     --no-tag) DO_TAG=false ;;
     --no-push) DO_PUSH=false ;;
     --no-branch) DO_BRANCH=false ;;
@@ -63,13 +65,13 @@ helm lint "${CHART_SOURCE_DIR}"
 echo "📦 Packaging Helm chart version ${NEW_VERSION}..."
 helm package "${CHART_SOURCE_DIR}"
 
-echo "🧾 Updating Helm repo index..."
-INDEX_FILE=index.yaml
-if [ -f "$INDEX_FILE" ]; then
-  helm repo index --url "${REPO_URL}" --merge "$INDEX_FILE" .
-else
-  helm repo index --url "${REPO_URL}" .
-fi
+echo "⬇️ Fetching latest index.yaml from ${BASE_BRANCH} to preserve previous versions..."
+git fetch origin "${BASE_BRANCH}"
+git show origin/${BASE_BRANCH}:index.yaml > old-index.yaml || touch old-index.yaml
+
+echo "🧾 Merging new chart into index.yaml..."
+helm repo index . --url "${REPO_URL}" --merge old-index.yaml
+rm -f old-index.yaml
 
 echo "📂 Committing changes to Git..."
 git add .
@@ -94,4 +96,4 @@ else
   echo "⚠️  Push skipped (--no-push was set)"
 fi
 
-echo "✅ Helm chart version ${NEW_VERSION} packaged successfully!"
+echo "✅ Helm chart version ${NEW_VERSION} packaged and index updated!"
