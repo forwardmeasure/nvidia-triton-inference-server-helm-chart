@@ -8,35 +8,7 @@ image:
   imageName: nvcr.io/nvidia/tritonserver:25.01-py3
   pullPolicy: IfNotPresent
   serverCommand: tritonserver
-  serverArgs:
-    - --model-repository=${MODEL_REPOSITORY_PATH}
-    # Model Repository Configuration (REQUIRED)
-    #
-    # Configure sources for model repository below.  Multiple repositories
-    # can be specified
-    #
-    # To download models from an S3 bucket, uncomment and configure below
-    # To specify a non-AWS S3 endpoint, use the form
-    #  s3://https://your-s3-endpoint:443/bucket/model_repository
-    #
-    #- --model-repository=s3://triton-inference-server-repository/model_repository
-    #
-    # Model Control Mode (Optional, default: none)
-    #
-    # To set model control mode, uncomment and configure below
-    #  for more details
-    #- --model-control-mode=explicit|poll|none
-    #
-    # Additional server args
-    #
-    # see https://github.com/triton-inference-server/server/blob/r24.05/README.md
-    #  for more details
-  modelRepositoryPath: # model repository path, depends on storage type
-  modelRepositoryType: nfs
-  modelRepository:
-    nfs:
-      path: # Add path of NFS directory
-      server: # Replace with the IP Address of your file server
+  serverArgs: []
   env: {}
 
   resources:
@@ -65,6 +37,43 @@ image:
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
+
+# Model Repository Configuration (REQUIRED)
+#
+# Configure sources for model repository below.  Multiple repositories
+# can be specified
+#
+# To download models from an S3 bucket, uncomment and configure below
+# To specify a non-AWS S3 endpoint, use the form
+#  s3://https://your-s3-endpoint:443/bucket/model_repository
+#
+#- --model-repository=s3://triton-inference-server-repository/model_repository
+#
+# Model Control Mode (Optional, default: none)
+#
+# To set model control mode, uncomment and configure below
+#  for more details
+#- --model-control-mode=explicit|poll|none
+#
+# Additional server args
+#
+# see https://github.com/triton-inference-server/server/blob/r24.05/README.md
+#  for more details
+modelRepository:
+  type: nfs # Options: nfs, s3, gcs, azure
+  nfs:
+    mountPath: /models # <-- Now configurable!
+  s3:
+    bucket: ""
+    region: ""
+    endpoint: ""
+    prefix: ""
+  gcs:
+    bucket: ""
+    prefix: ""
+  azure:
+    container: ""
+    prefix: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -114,10 +123,7 @@ inference_deployment:
 ingress:
   enabled: false
   className: ""
-  annotations:
-    {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+  annotations: {}
   hosts:
     - host: chart-example.local
       paths:
@@ -158,9 +164,15 @@ serviceMonitor:
 secret:
   create: true
   name: tis-model-repository-secret
-  data:
-    # update the following with base64 encoded parameters
-    #  AWS_REGION: YOUR_AWS_REGION_BASE64_ENCODED
-    #  AWS_SECRET_KEY_ID: YOUR_AWS_SECRET_KEY_ID_ENCODED
-    #  AWS_SECRET_ACCESS_KEY: YOUR_AWS_SECRET_ACCESS_KEY_BASE64_ENCODED
-    #  AWS_SESSION_TOKEN: YOUR_AWS_SESSION_TOKEN_BASE64_ENCODED
+
+  # List of environment variables to pull from the secret
+  # These will be mounted into the container using `env.valueFrom.secretKeyRef`
+  keys:
+    - name: AWS_REGION
+    - name: AWS_SECRET_ACCESS_KEY
+    - name: AWS_SECRET_KEY_ID
+    - name: AWS_SESSION_TOKEN
+    # Add GCS/Azure equivalents if needed
+    # - name: GOOGLE_APPLICATION_CREDENTIALS_JSON
+    # - name: AZURE_STORAGE_ACCOUNT
+    # - name: AZURE_STORAGE_KEY
