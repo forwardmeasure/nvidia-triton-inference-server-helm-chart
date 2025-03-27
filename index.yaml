@@ -3,7 +3,18 @@ entries:
   triton-inference-server:
   - apiVersion: v2
     appVersion: 25.01-py3
-    created: "2025-03-27T00:29:19.268424789-04:00"
+    created: "2025-03-27T18:38:18.925217656-04:00"
+    description: Triton Inference Server
+    digest: cc964a053019be2f99188091c71529c90480054b29d5977388a583b6492f08eb
+    icon: https://avatars.githubusercontent.com/u/5445689?v=4&size=64
+    name: triton-inference-server
+    type: application
+    urls:
+    - https://forwardmeasure.github.io/nvidia-triton-inference-server-helm-chart/triton-inference-server-1.0.5.tgz
+    version: 1.0.5
+  - apiVersion: v2
+    appVersion: 25.01-py3
+    created: "2025-03-27T18:38:18.924631827-04:00"
     description: Triton Inference Server
     digest: 7db63400261e325f3a896bbed394c6429344ca6fe9ce6caf43044f0347aaa452
     icon: https://avatars.githubusercontent.com/u/5445689?v=4&size=64
@@ -14,7 +25,7 @@ entries:
     version: 1.0.3
   - apiVersion: v2
     appVersion: 25.01-py3
-    created: "2025-03-27T00:29:19.26812229-04:00"
+    created: "2025-03-27T18:38:18.924026585-04:00"
     description: Triton Inference Server
     digest: d3631f38d8715602624b60ef61dba1799557f6182d9c60d51dc47ffefe45ca8e
     icon: https://avatars.githubusercontent.com/u/5445689?v=4&size=64
@@ -25,7 +36,7 @@ entries:
     version: 1.0.2
   - apiVersion: v2
     appVersion: 25.01-py3
-    created: "2025-03-27T00:29:19.267816351-04:00"
+    created: "2025-03-27T18:38:18.923447203-04:00"
     description: Triton Inference Server
     digest: aa836522caa1f29e554a2131cb0855180932f133e60ba97888e5dee5ef6ba127
     icon: https://avatars.githubusercontent.com/u/5445689?v=4&size=64
@@ -36,7 +47,7 @@ entries:
     version: 1.0.1
   - apiVersion: v2
     appVersion: "1.0"
-    created: "2025-03-27T00:29:19.26750835-04:00"
+    created: "2025-03-27T18:38:18.922869667-04:00"
     description: Triton Inference Server
     digest: 52fbd326fe63fbd28ed44c7001539332f06aefeca438ea4495f9685af19b0077
     icon: https://avatars.githubusercontent.com/u/5445689?v=4&size=64
@@ -45,4 +56,4 @@ entries:
     urls:
     - https://forwardmeasure.github.io/nvidia-triton-inference-server-helm-chart/triton-inference-server-1.0.0.tgz
     version: 1.0.0
-generated: "2025-03-27T00:29:19.26712967-04:00"
+generated: "2025-03-27T18:38:18.922191857-04:00"

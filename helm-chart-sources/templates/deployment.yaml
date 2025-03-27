@@ -84,6 +84,11 @@ spec:
             - --model-repository=azure://{{ .Values.modelRepository.azure.container }}/{{ .Values.modelRepository.azure.prefix }}
             {{- end }}
 
+            # 🔽 Consume extra server arguments here
+            {{- range .Values.image.serverArgs }}
+            - {{ . }}
+            {{- end }}
+            
           env:
           {{- if .Values.image.env }}
           {{- range $key, $value := .Values.image.env }}

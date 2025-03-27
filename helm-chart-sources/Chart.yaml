@@ -2,6 +2,6 @@ apiVersion: v2
 description: Triton Inference Server
 name: triton-inference-server
 type: application
-version: 1.0.3
+version: 1.0.5
 appVersion: 25.01-py3
 icon: https://avatars.githubusercontent.com/u/5445689?v=4&size=64
