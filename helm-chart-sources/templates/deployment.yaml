@@ -24,6 +24,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
       volumes:
         {{- if eq .Values.modelRepository.type "nfs" }}
         - name: models
@@ -32,7 +33,7 @@ spec:
             path: {{ .Values.modelRepository.nfs.path }}
             readOnly: false
         {{- end }}
-        
+
       {{- if .Values.image.extraVolumes }}
         {{ toYaml .Values.image.extraVolumes | indent 8 }}
       {{- end }}
@@ -49,7 +50,10 @@ spec:
 
           volumeMounts:
             {{- if eq .Values.modelRepository.type "nfs" }}
-            - mountPath: {{ .Values.modelRepository.mountPath }}
+            - mountPath: {{ .Values.modelRepository.nfs.mountPath }}
+              name: models
+            {{- else if eq .Values.modelRepository.type "local" }}
+            - mountPath: {{ .Values.modelRepository.local.mountPath }}
               name: models
             {{- end }}
 
@@ -59,17 +63,25 @@ spec:
 
           args:
             - {{ .Values.image.serverCommand }}
+
             {{- if eq .Values.modelRepository.type "nfs" }}
             - --model-repository={{ .Values.modelRepository.nfs.mountPath }}
+
+            {{- else if eq .Values.modelRepository.type "local" }}
+            - --model-repository={{ .Values.modelRepository.local.mountPath }}
+
             {{- else if eq .Values.modelRepository.type "s3" }}
+            {{- if .Values.modelRepository.s3.endpoint }}
+            - --model-repository=s3://{{ .Values.modelRepository.s3.endpoint }}/{{ .Values.modelRepository.s3.bucket }}/{{ .Values.modelRepository.s3.prefix }}
+            {{- else }}
             - --model-repository=s3://{{ .Values.modelRepository.s3.bucket }}/{{ .Values.modelRepository.s3.prefix }}
+            {{- end }}
+
             {{- else if eq .Values.modelRepository.type "gcs" }}
             - --model-repository=gs://{{ .Values.modelRepository.gcs.bucket }}/{{ .Values.modelRepository.gcs.prefix }}
+
             {{- else if eq .Values.modelRepository.type "azure" }}
             - --model-repository=azure://{{ .Values.modelRepository.azure.container }}/{{ .Values.modelRepository.azure.prefix }}
-            {{- end }}
-            {{- range .Values.image.serverArgs }}
-            - {{ . }}
             {{- end }}
 
           env:
@@ -115,9 +127,6 @@ spec:
               port: http
 
           startupProbe:
-            # allows Triton to load the models during 30*10 = 300 sec = 5 min
-            # starts checking the other probes only after the success of this one
-            # for details, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes
             periodSeconds: 10
             failureThreshold: 30
             httpGet:

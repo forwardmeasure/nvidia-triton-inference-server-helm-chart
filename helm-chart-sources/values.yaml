@@ -60,20 +60,28 @@ fullnameOverride: ""
 # see https://github.com/triton-inference-server/server/blob/r24.05/README.md
 #  for more details
 modelRepository:
-  type: nfs # Options: nfs, s3, gcs, azure
+  type: local # Options: local, nfs, s3, gcs, azure
+
+  local:
+    mountPath: /models
   nfs:
-    mountPath: /models # <-- Now configurable!
+    server: your-nfs-server
+    path: /exported/models
+    mountPath: /models # Used only for volumeMounts and CLI arg when type is nfs
+
   s3:
-    bucket: ""
-    region: ""
-    endpoint: ""
-    prefix: ""
+    bucket: your-s3-bucket
+    region: your-region
+    endpoint: https://s3.your-provider.com # Optional, for custom S3-compatible backends
+    prefix: triton-models # Optional folder within the bucket
+
   gcs:
-    bucket: ""
-    prefix: ""
+    bucket: your-gcs-bucket
+    prefix: triton-models
+
   azure:
-    container: ""
-    prefix: ""
+    container: your-container
+    prefix: triton-models
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -167,12 +175,4 @@ secret:
 
   # List of environment variables to pull from the secret
   # These will be mounted into the container using `env.valueFrom.secretKeyRef`
-  keys:
-    - name: AWS_REGION
-    - name: AWS_SECRET_ACCESS_KEY
-    - name: AWS_SECRET_KEY_ID
-    - name: AWS_SESSION_TOKEN
-    # Add GCS/Azure equivalents if needed
-    # - name: GOOGLE_APPLICATION_CREDENTIALS_JSON
-    # - name: AZURE_STORAGE_ACCOUNT
-    # - name: AZURE_STORAGE_KEY
+  keys: []
