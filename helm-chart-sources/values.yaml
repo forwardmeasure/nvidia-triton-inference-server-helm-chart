@@ -8,7 +8,9 @@ image:
   imageName: nvcr.io/nvidia/tritonserver:25.01-py3
   pullPolicy: IfNotPresent
   serverCommand: tritonserver
-  serverArgs: []
+  serverArgs:
+    - "--exit-on-error=false"
+    - "--strict-readiness=false"
   env: {}
 
   resources:
